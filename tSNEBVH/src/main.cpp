@@ -30,11 +30,66 @@ void exportPositions(ofxBvh& bvh, string filename, bool relative=false) {
     output.close();
 }
 
+float smoothStep(float x) {
+    return 3*(x*x) - 2*(x*x*x);
+}
+
+class AnimatedMesh {
+public:
+    ofMesh a, b;
+    ofMesh getInterpolated(float t, bool copyColors=true) {
+        if(t == 0) {
+            return a;
+        }
+        if(t == 1) {
+            return b;
+        }
+        ofMesh x;
+        x.setMode(a.getMode());
+        if(copyColors) {
+            x.addColors(a.getColors());
+        }
+        auto& av = a.getVertices();
+        auto& bv = b.getVertices();
+        int n = av.size();
+        if(av.size() != bv.size()) {
+            return a;
+        }
+        for(int i = 0; i < n; i++) {
+            ofVec3f v(av[i]);
+            v.interpolate(bv[i], t);
+            x.addVertex(v);
+        }
+        return x;
+    }
+    float transitionTime = 0;
+    float transitionDuration = 1;
+    void transition(float transitionDuration=1) {
+        if(a.getNumVertices() > 0) {
+            transitionTime = ofGetElapsedTimef();
+            this->transitionDuration = transitionDuration;
+        }
+    }
+    float tPrevious = 0;
+    ofMesh getCurrent(bool copyColors=true) {
+        float curTime = ofGetElapsedTimef();
+        float t = (curTime - transitionTime) / transitionDuration;
+        if(tPrevious < 1 && t >= 1) {
+            std::swap(a,b);
+        }
+        tPrevious = t;
+        if(t >= 1) {
+            t = 0;
+        }
+        return getInterpolated(smoothStep(t), copyColors);
+    }
+};
+
 class ofApp : public ofBaseApp {
 public:
     ofxBvh bvh;
     ofEasyCam cam;
-    ofMesh mesh;
+    AnimatedMesh meshPair;
     string embeddingFilename;
     int embeddingIndex = 0;
     deque<int> recentIndices;
@@ -67,6 +122,7 @@ public:
         }
     }
     void loadEmbedding(ofFile path) {
+        ofMesh& mesh = meshPair.b;
         mesh.clear();
         mesh.setMode(OF_PRIMITIVE_POINTS);
         
@@ -85,8 +141,16 @@ public:
             ofColor color = ofColor::fromHsb(hue, 255, 255);
             mesh.addColor(color);
         }
+        
+        meshPair.transition();
+    }
+    void update() {
+        
     }
     void draw() {
+        float t = ofMap(sin(ofGetElapsedTimef()), -1, +1, 0, 1);
+        ofMesh mesh = meshPair.getCurrent(); //meshPair.getInterpolated(t);
+        
         ofSetColor(255);
         ofDrawBitmapString(embeddingFilename, 10, 20);
         
