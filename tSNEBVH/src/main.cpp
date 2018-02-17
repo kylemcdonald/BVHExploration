@@ -59,10 +59,12 @@ public:
         ofDirectory files;
         files.allowExt("tsv");
         files.listDir("embeddings");
-        ofFile path = files[embeddingIndex % files.size()];
-        embeddingFilename = path.getBaseName();
-        loadEmbedding(path);
-        embeddingIndex++;
+        if(files.size() > 0) {
+            ofFile path = files[embeddingIndex % files.size()];
+            embeddingFilename = path.getBaseName();
+            loadEmbedding(path);
+            embeddingIndex++;
+        }
     }
     void loadEmbedding(ofFile path) {
         mesh.clear();
@@ -123,6 +125,14 @@ public:
         }
         bvh.update();
         
+        cam.begin();
+        bvh.draw();
+        cam.end();
+        
+        if(mesh.getNumVertices() == 0) {
+            return;
+        }
+        
         recentIndices.push_front(nearestIndex);
         while(recentIndices.size() > 32) {
             recentIndices.pop_back();
@@ -141,10 +151,6 @@ public:
             ofDrawLine(position, nextPosition);
         }
         ofPopMatrix();
-        
-        cam.begin();
-        bvh.draw();
-        cam.end();
     }
     void keyPressed(int key) {
         if(key == ' ') {
