@@ -5,6 +5,9 @@
 *.app*
 *.DS_*
 
+.ipynb_checkpoints
+csv
+
 .svn/
 obj/
 bin/

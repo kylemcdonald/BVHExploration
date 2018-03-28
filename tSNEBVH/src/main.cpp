@@ -1,34 +1,6 @@
 #include "ofMain.h"
 #include "ofxBvh.h"
 
-void exportPositions(ofxBvh& bvh, string filename, bool relative=false) {
-    ofFile output;
-    output.open(filename, ofFile::WriteOnly);
-    int m = bvh.getNumFrames();
-    for(int j = 0; j < m; j++) {
-        int n = bvh.getNumJoints();
-        bvh.setFrame(j);
-        bvh.update();
-        for(int i = 0; i < n; i++) {
-            const ofxBvhJoint* joint = bvh.getJoint(i);
-            ofVec3f position = joint->getPosition();
-            if(relative) {
-                ofxBvhJoint* parent = joint->getParent();
-                if(parent != NULL) {
-                    position -= parent->getPosition();
-                }
-            }
-            output << position.x << '\t' << position.y << '\t' << position.z;
-            if(i + 1 < n) {
-                output << "\t";
-            }
-        }
-        if(j + 1 < m) {
-            output << "\n";
-        }
-    }
-    output.close();
-}
 
 float smoothStep(float x) {
     return 3*(x*x) - 2*(x*x*x);
@@ -96,6 +68,7 @@ public:
     
     void setup() {
         ofBackground(0);
+        glPointSize(4);
         
 //        bvh.load("bvh/Daito/Take54.bvh");
 //        exportPositions(bvh, "Take54-absolute-export.tsv", false);
@@ -104,6 +77,7 @@ public:
         bvh.load("bvh/MotionData-180216/erisa003.bvh");
 //        exportPositions(bvh, "erisa003-absolute-export.tsv", false);
 //        exportPositions(bvh, "erisa003-relative-export.tsv", true);
+//        exportQuaternions(bvh, "erisa003-quaternions.tsv");
         
 //        bvh.play();
         bvh.setLoop(true);
