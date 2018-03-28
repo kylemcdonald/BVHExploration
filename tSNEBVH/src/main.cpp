@@ -16,8 +16,9 @@ void exportPositions(ofxBvh& bvh, string filename, bool relative=false, float bp
     int eight_bars_in_frames = eight_bars * fps;
 
     int label ;
+    auto& joints = bvh.getJoints();
     for(int j = 0; j < m; j++) {
-        int n = bvh.getNumJoints();
+        int n = joints.size();
         
         if(j < two_bars_in_frames)
         {
@@ -37,7 +38,7 @@ void exportPositions(ofxBvh& bvh, string filename, bool relative=false, float bp
         bvh.setFrame(j);
         bvh.update();
         for(int i = 0; i < n; i++) {
-            const ofxBvhJoint* joint = bvh.getJoints()[i];
+            const ofxBvhJoint* joint = joints[i];
             ofVec3f position = joint->getPosition();
             if(relative) {
                 ofxBvhJoint* parent = joint->getParent();
@@ -129,8 +130,8 @@ public:
 //        exportPositions(bvh, "Take54-absolute-export.tsv", false);
 //        exportPositions(bvh, "Take54-relative-export.tsv", true);
         
-        bvh.load("bvh/erisa004_erisa004_mcp.bvh");
-        exportPositions(bvh, "erisa004-absolute-export.tsv", false, 90);
+        bvh.load("bvh/MotionData-180216/erisa003.bvh");
+//        exportPositions(bvh, "erisa004-absolute-export.tsv", false, 90);
 //        exportPositions(bvh, "erisa003-relative-export.tsv", true);
 //        exportQuaternions(bvh, "erisa003-quaternions.tsv");
         
