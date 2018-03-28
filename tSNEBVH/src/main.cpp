@@ -1,6 +1,61 @@
 #include "ofMain.h"
 #include "ofxBvh.h"
+//labels
+vector<string>label_str = {"tPose", "hand", "foot", "all", "fun", "sad", "robot", "sexy", "junkie", "bouncie", "wavey", "swingy"};
 
+void exportPositions(ofxBvh& bvh, string filename, bool relative=false, float bpm = 90) {
+    ofFile output;
+    output.open(filename, ofFile::WriteOnly);
+    int m = bvh.getNumFrames();
+    
+    float fps = 120;
+    
+    float two_bars = 60. / bpm * 8 * 2;
+    float eight_bars  = 60. / bpm * 8 * 8;
+    int two_bars_in_frames = two_bars * fps;
+    int eight_bars_in_frames = eight_bars * fps;
+
+    int label ;
+    for(int j = 0; j < m; j++) {
+        int n = bvh.getNumJoints();
+        
+        if(j < two_bars_in_frames)
+        {
+            label = 0;
+        }
+        else if(j < two_bars_in_frames + eight_bars_in_frames * 11  )
+        {
+            label = (j - two_bars_in_frames) / eight_bars_in_frames + 1;
+        }
+        else
+        {
+            label = 12;
+        }
+        
+        output << label << "\t";
+        
+        bvh.setFrame(j);
+        bvh.update();
+        for(int i = 0; i < n; i++) {
+            const ofxBvhJoint* joint = bvh.getJoints()[i];
+            ofVec3f position = joint->getPosition();
+            if(relative) {
+                ofxBvhJoint* parent = joint->getParent();
+                if(parent != NULL) {
+                    position -= parent->getPosition();
+                }
+            }
+            output << position.x << '\t' << position.y << '\t' << position.z;
+            if(i + 1 < n) {
+                output << "\t";
+            }
+        }
+        if(j + 1 < m) {
+            output << "\n";
+        }
+    }
+    output.close();
+}
 
 float smoothStep(float x) {
     return 3*(x*x) - 2*(x*x*x);
@@ -74,8 +129,8 @@ public:
 //        exportPositions(bvh, "Take54-absolute-export.tsv", false);
 //        exportPositions(bvh, "Take54-relative-export.tsv", true);
         
-        bvh.load("bvh/MotionData-180216/erisa003.bvh");
-//        exportPositions(bvh, "erisa003-absolute-export.tsv", false);
+        bvh.load("bvh/erisa004_erisa004_mcp.bvh");
+        exportPositions(bvh, "erisa004-absolute-export.tsv", false, 90);
 //        exportPositions(bvh, "erisa003-relative-export.tsv", true);
 //        exportQuaternions(bvh, "erisa003-quaternions.tsv");
         
